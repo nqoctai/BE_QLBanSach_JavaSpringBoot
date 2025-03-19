@@ -7,8 +7,6 @@ import org.springframework.security.config.Customizer;
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import com.nimbusds.jose.util.Base64;
 
-import java.util.Optional;
-
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -21,21 +19,13 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
-import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
-import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 
-import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.web.client.RestTemplate;
 
-import doancuoiki.db_cnpm.QuanLyNhaSach.domain.Account;
-import doancuoiki.db_cnpm.QuanLyNhaSach.dto.response.ResLoginDTO;
-import doancuoiki.db_cnpm.QuanLyNhaSach.repository.AccountRepository;
 import doancuoiki.db_cnpm.QuanLyNhaSach.util.SecurityUtil;
 
 @Configuration
@@ -43,9 +33,6 @@ import doancuoiki.db_cnpm.QuanLyNhaSach.util.SecurityUtil;
 public class SecurityConfiguaration {
 
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
-    private final OAuth2UserService<OAuth2UserRequest, OAuth2User> oauth2UserService;
-    // private final OAuth2AuthenticationSuccessHandler
-    // oAuth2AuthenticationSuccessHandler;
 
     // private final CorsConfigurationSource corsConfigurationSource;
 
@@ -53,11 +40,8 @@ public class SecurityConfiguaration {
     private String jwtKey;
 
     public SecurityConfiguaration(
-            CustomAuthenticationEntryPoint customAuthenticationEntryPoint,
-            OAuth2UserService<OAuth2UserRequest, OAuth2User> oauth2UserService) {
+            CustomAuthenticationEntryPoint customAuthenticationEntryPoint) {
         this.customAuthenticationEntryPoint = customAuthenticationEntryPoint;
-        this.oauth2UserService = oauth2UserService;
-        // this.oAuth2AuthenticationSuccessHandler = oAuth2AuthenticationSuccessHandler;
     }
 
     @Bean
@@ -74,7 +58,7 @@ public class SecurityConfiguaration {
                 "/test", "/storage/**", "/api/v1/files", "/api/v1/categories",
                 "/api/v1/account", "/api/v1/book/**", "/api/v1/books/**",
                 "/api/v1/payment/**", "/api/v1/auth/login/oauth2/github",
-                "/login/oauth2/**", "/oauth2/**" // Add these paths to whitelist
+                "/api/v1/auth/outbound/authentication"
         };
 
         http
@@ -85,18 +69,6 @@ public class SecurityConfiguaration {
                                 .requestMatchers(whiteList).permitAll()
                                 .anyRequest().authenticated())
                 .formLogin(f -> f.disable())
-                // .oauth2Login(oauth2 -> oauth2
-                // .authorizationEndpoint(auth -> auth.baseUri("/oauth2/authorize"))
-                // .redirectionEndpoint(redirect -> redirect.baseUri("/login/oauth2/code/*"))
-                // .userInfoEndpoint(userInfo -> userInfo
-                // .userService(oauth2UserService))
-                // .successHandler(oAuth2AuthenticationSuccessHandler)
-                // // .defaultSuccessUrl("http://localhost:3000/oauth2/redirect", true)
-                // .failureHandler((request, response, exception) -> {
-                // // Handle OAuth2 login failure
-                // System.err.println("OAuth2 login failed: " + exception.getMessage());
-                // response.sendRedirect("/login?error=oauth2_failure");
-                // }))
                 .oauth2ResourceServer((oauth2) -> oauth2.jwt(Customizer.withDefaults())
                         .authenticationEntryPoint(customAuthenticationEntryPoint))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
